@@ -30,7 +30,7 @@ static const Plane4 kClipPlanes[] = {
 
 	{ // near ( z = 0 )
 	  .n = {0.0f, 0.0f, 1.0f, 0.0f},
-	  .p = {0.0f, 0.0f, 0.0f, 0.0f}
+	  .p = {0.0f, 0.0f, 0.0f, 1.0f}
 	}, 
 
 	{ // far ( z = w )
@@ -59,6 +59,10 @@ static inline void write_itx_to_out(Plane4* P, VSout* s, VSout* e, VSout* out,
 					int* out_n_ptr)
 {
 	float t = plane4_compute_intersect_t(*P,s->pos,e->pos);
+
+	t = (t < 0.0f) ? 0.0f : t;
+	t = (t > 1.0f) ? 1.0f : t;
+
 	VSout* i = &out[(*out_n_ptr)++];
 	compute_intersection(*s,*e,i,t);
 }

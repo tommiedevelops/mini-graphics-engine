@@ -5,11 +5,12 @@
 #include "triangle.h"
 #include "framebuffer.h"
 
-typedef struct Vec2i {
+typedef struct Vec2i 
+{
 	int x, y;
 } Vec2i;
 
-Vec2i vec2i_sub(Vec2i a, Vec2i b)
+static inline Vec2i vec2i_sub(Vec2i a, Vec2i b)
 {
 	return (Vec2i){a.x - b.x, a.y - b.y};
 }
@@ -19,8 +20,10 @@ void rasterize_pixel(Vec2i P,BaryCoords b, FSin* out, VSout* v[3])
 
 	// Perspective Correct Attributes
 	float w_inv = bary_mix1(b, v[0]->w_inv, v[1]->w_inv, v[2]->w_inv);
+	float z = bary_mix1(b, v[0]->pos.z, v[1]->pos.z, v[2]->pos.z);
 
-	float w = 1.0f/w_inv;
+	float w = 1.0/w_inv;
+	float depth = z * w;
 
 	Vec2f uv_over_w = bary_mix2( b
 			           , v[0]->uv_over_w
@@ -48,7 +51,7 @@ void rasterize_pixel(Vec2i P,BaryCoords b, FSin* out, VSout* v[3])
 		.world_pos = world_pos,
 		.normal   = normal,
 		.uv       = uv,	
-		.depth    = w
+		.depth    = depth
 	};
 
 }
@@ -125,18 +128,21 @@ void rasterize_triangle( Renderer* r
 		for(P.x = box.xmin; P.x <= box.xmax; P.x++)
 		{
 
-			bool inside_tri =  e01_xy >= 0 
-				       && e12_xy >= 0 
-				       && e20_xy >= 0;
+			bool inside_tri  = e01_xy >= 0 
+				        && e12_xy >= 0 
+				        && e20_xy >= 0;
 
 			if(inside_tri)
 			{
+				// why does this order work and not any other?
 				BaryCoords b = {e12_xy, e20_xy, e01_xy};
+
 				rasterize_pixel(P,b,&fs_in,tri->v);
+
 				frag_shader(&fs_in, &fs_out, r->fs_u);
 				uint32_t col = vec4f_to_rgba32(fs_out.color);
-				frame_buffer_draw_pixel(fb,P.x,P.y,
-					                col,fs_out.depth);
+				frame_buffer_draw_pixel(fb,P.x,P.y,col,
+							      fs_out.depth);
 			}
 
 			e01_xy += e01.step_x;

@@ -16,9 +16,12 @@ void on_init(App* app, void* game_data) {
 	/* for preparing Assets */
 
 	// plane mesh
-	Mesh* plane_mesh = mesh_parse_from_obj("assets/models/bunny.obj");
+	Mesh* bunny_mesh = mesh_parse_from_obj("assets/models/bunny.obj");
+	Mesh* plane_mesh = mesh_parse_from_obj("assets/models/plane.obj");
 	assets_add_mesh(app->assets, plane_mesh, "plane");
+	assets_add_mesh(app->assets, bunny_mesh, "bunny");
 	mesh_recalculate_normals(plane_mesh);
+	mesh_recalculate_normals(bunny_mesh);
 
 	Vec4f col = (Vec4f){1.0f,0.0f,1.0f,1.0f};
 	Vec4f col2 = (Vec4f){0.0f,1.0f,1.0f,1.0f};
@@ -65,28 +68,29 @@ void on_start(App* app, void* game_data) {
 	/* for preparing Scene */
 	init_scene(app, game_data);
 
-	Mesh *mesh = assets_get_mesh(app->assets, "plane");
+	Mesh *plane_mesh = assets_get_mesh(app->assets, "plane");
+	Mesh *bunny_mesh = assets_get_mesh(app->assets, "bunny");
 	Material *pink = assets_get_material(app->assets, "pink");
 	Material *blue = assets_get_material(app->assets, "blue");
 
-//	Quat rot = quat_angle_axis(-3.14/2, VEC3F_X);
+	Quat rot_90y = quat_angle_axis(-3.14/2, VEC3F_X);
 	Quat rot = QUAT_IDENTITY;
 
-	GameObj* floor = game_obj_create
-		         (
-				transform_create(VEC3F_0, rot, VEC3F_1),
-				mesh, pink
-			 );
-
-	Vec3f wall_pos = vec3f_create(1.0f, 0.0f, -3.0f);
-
-	GameObj* wall = game_obj_create(
-				transform_create(wall_pos, rot, VEC3F_1),
-				mesh, blue
+	const float height_above_ground = 0.3f;
+	Vec3f bunny_pos = (Vec3f){0.0f, height_above_ground, 0.0f};
+	GameObj* bunny = game_obj_create (
+				transform_create(bunny_pos, QUAT_IDENTITY, VEC3F_1),
+				bunny_mesh, pink
+			);
+		
+	Vec3f floor_scale = (Vec3f){3.0f, 1.0f, 3.0f};
+	GameObj* floor = game_obj_create(
+				transform_create(VEC3F_0, QUAT_IDENTITY, VEC3F_1),
+				plane_mesh, blue
 			);
 
-	scene_add_game_obj(app->scene, floor, "pink");
-	//scene_add_game_obj(app->scene, wall, "blue");
+	scene_add_game_obj(app->scene, floor, "floor");
+	scene_add_game_obj(app->scene, bunny, "bunny");
 }
 
 void on_event(App* app, void* game_data, SDL_Event* e) {
@@ -181,7 +185,7 @@ void on_update(App* app, void* game_data, float dt) {
 
 	Scene* scene = app->scene;
 	Camera* cam = scene_get_camera(scene);
-	GameObj* go = scene_get_game_obj(scene, "pink");
+	GameObj* go = scene_get_game_obj(scene, "bunny");
 	rotate_go(go, dt);
 	handle_movement(cam->transform, gd, dt);
 }

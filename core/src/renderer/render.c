@@ -75,12 +75,12 @@ static void assemble_vertex_shader_input_from_tri(const Mesh* const mesh,
 }
 
 static void draw_triangle(
-		  	Renderer*    r,      // use this renderer 
-		  	FrameBuffer* fb,     // output to this framebuffer
-		  	Mesh*        mesh,   // draw this mesh
-	          	Material*    mat,    // with this material
-		  	int          tri_idx // this particular triangle of the mesh
-			) 
+		  	   Renderer*    r,      // use this renderer 
+		  	   FrameBuffer* fb,     // output to this framebuffer
+		  	   Mesh*        mesh,   // draw this mesh
+	          	   Material*    mat,    // with this material
+		  	   int          tri_idx // this particular triangle of the mesh
+			 ) 
 {
 	VertShaderF vert_shader = mat->vert_shader;
 	FragShaderF frag_shader = mat->frag_shader;
@@ -92,7 +92,7 @@ static void draw_triangle(
 	assemble_vertex_shader_input_from_tri(mesh, tri_idx, vs_in);
 
 	// apply the vertex shader and save perspective correct attributes
-	for(int i = 0; i < 3; i++) 
+	for(size_t i = 0; i < 3; ++i) 
 	{
 		vert_shader(&vs_in[i], &vs_out[i], r->vs_u);
 
